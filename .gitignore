@@ -1,0 +1,11 @@
+# Prevent accidental commits of real configs or credentials
+*.local.yaml
+*.local.yml
+secrets*
+*.key
+*.pem
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.yaml.bak

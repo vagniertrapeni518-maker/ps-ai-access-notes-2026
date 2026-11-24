@@ -1,0 +1,123 @@
+# Clash Verge Rev (Mihomo) 自建节点本地脱敏配置模板
+# 使用前请将 <YOUR_...> 替换为真实值，并妥善保存在本机，切勿上传公开仓库
+
+mixed-port: 7897
+allow-lan: false
+bind-address: 127.0.0.1
+mode: rule
+log-level: warning
+ipv6: false
+
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "localhost.ptlogin2.qq.com"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "time.*.com"
+    - "ntp.*.com"
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+proxies:
+  - name: "VPS-VLESS-Reality"
+    type: vless
+    server: "<YOUR_VPS_IP>"
+    port: 443
+    uuid: "<YOUR_UUID>"
+    network: tcp
+    tls: true
+    udp: true
+    # 若 3x-ui 导出的 vless:// 链接含 flow=xtls-rprx-vision 则取消下一行注释
+    # flow: xtls-rprx-vision
+    servername: "www.bing.com"
+    client-fingerprint: chrome
+    reality-opts:
+      public-key: "<YOUR_PUBLIC_KEY>"
+      short-id: "<YOUR_SHORT_ID>"
+      support-x25519mlkem768: true
+
+  # 可选备用节点：Hysteria2（若晚高峰拥堵且已部署，去掉下方注释并填入参数）
+  # - name: "VPS-Hysteria2-Backup"
+  #   type: hysteria2
+  #   server: "<YOUR_VPS_IP>"
+  #   port: 2053
+  #   password: "<YOUR_HY2_PASSWORD>"
+  #   sni: "www.bing.com"
+  #   skip-cert-verify: true
+  #   up: "50 Mbps"
+  #   down: "200 Mbps"
+
+proxy-groups:
+  - name: "AI-专用"
+    type: select
+    proxies:
+      - "VPS-VLESS-Reality"
+      # - "VPS-Hysteria2-Backup"
+
+  - name: "节点选择"
+    type: select
+    proxies:
+      - "VPS-VLESS-Reality"
+      # - "VPS-Hysteria2-Backup"
+      - DIRECT
+
+  - name: "漏网之鱼"
+    type: select
+    proxies:
+      - "节点选择"
+      - DIRECT
+
+rules:
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+
+  # AI Services
+  - DOMAIN-SUFFIX,openai.com,AI-专用
+  - DOMAIN-SUFFIX,chatgpt.com,AI-专用
+  - DOMAIN-SUFFIX,oaistatic.com,AI-专用
+  - DOMAIN-SUFFIX,oaiusercontent.com,AI-专用
+  - DOMAIN-SUFFIX,auth0.com,AI-专用
+  - DOMAIN-SUFFIX,anthropic.com,AI-专用
+  - DOMAIN-SUFFIX,claude.ai,AI-专用
+  - DOMAIN-SUFFIX,claude.com,AI-专用
+  - DOMAIN-SUFFIX,google.com,AI-专用
+  - DOMAIN-SUFFIX,googleapis.com,AI-专用
+  - DOMAIN-SUFFIX,gstatic.com,AI-专用
+  - DOMAIN-SUFFIX,googleusercontent.com,AI-专用
+  - DOMAIN-SUFFIX,deepmind.com,AI-专用
+  - DOMAIN-SUFFIX,gvt1.com,AI-专用
+  - DOMAIN-SUFFIX,gvt2.com,AI-专用
+  - DOMAIN-SUFFIX,antigravity.google,AI-专用
+  - DOMAIN-SUFFIX,x.ai,AI-专用
+  - DOMAIN-SUFFIX,grok.com,AI-专用
+  - DOMAIN-SUFFIX,x.com,AI-专用
+  - DOMAIN-SUFFIX,twitter.com,AI-专用
+  - DOMAIN-SUFFIX,twimg.com,AI-专用
+
+  # Dev & Open Source
+  - DOMAIN-SUFFIX,github.com,节点选择
+  - DOMAIN-SUFFIX,githubusercontent.com,节点选择
+
+  # Direct Domestic Traffic
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,漏网之鱼
